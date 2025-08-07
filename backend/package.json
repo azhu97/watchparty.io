@@ -1,12 +1,17 @@
 {
   "name": "watchparty.io",
   "version": "1.0.0",
-  "description": "Real time scoreboard and watchparties",
+  "description": "Real time scoreboard and watch parties",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js", 
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
