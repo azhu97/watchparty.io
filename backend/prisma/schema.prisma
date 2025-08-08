@@ -13,3 +13,121 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  username      String   @unique
+  password      String    
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // relations 
+  chatMessages    ChatMessage[] 
+  favoriteGames   FavoriteGame[]
+  watchParties    WatchParty[]    @relation("WatchPartyHost")
+  participations   WatchPartyParticipant[]
+
+  @@map("users")
+}
+
+model Game {
+  id          Int      @id @default(autoincrement())
+  homeTeam    String
+  awayTeam    String
+  homeScore   Int         @default(0)
+  awayScore   Int         @default(0)
+  quarter     Int         @default(1)
+  timeLeft    String      @default("12:00")
+  status      GameStatus  @default(SCHEDULED)
+  gameDate    DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  chatMessages   ChatMessage[]
+  favoriteGames  FavoriteGame[]
+  watchParties   WatchParty[]
+
+  @@map("games")
+}
+
+model ChatMessage {
+  id         Int         @id @default(autoincrement())
+  message    String
+  createdAt  DateTime    @default(now())
+
+  // foreign keys
+  userId      Int
+  gameId      Int
+
+  // relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model FavoriteGame {
+  id         Int         @id @default(autoincrement())
+  createdAt  DateTime    @default(now()) 
+
+  // foreign keys 
+  userId     Int
+  gameId     Int
+
+  // relations 
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game       Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // make sure that the same user can't favorite the same game twice, it don't make any sense duh 
+  @@unique([userId, gameId])
+  @@map("favorite_games")
+}
+
+model WatchParty {
+  id            Int     @id @default(autoincrement())
+  name          String
+  description   String
+  isPrivate     Boolean @default(false)
+  maxUsers      Int     @default(50)
+  password      String? 
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // foreign keys
+  hostId        Int
+  gameId        Int? 
+
+  // relation
+  host          User    @relation("WatchPartyHost", fields: [hostId], references: [id], onDelete: Cascade)
+  game          Game?    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  particpants   WatchPartyParticipant[]
+
+  @@map("watch_parties")
+}
+
+model WatchPartyParticipant {
+  id               Int      @id @default(autoincrement())
+  joinedAt         DateTime @default(now())
+
+  // foreign keys 
+  userId          Int
+  watchPartyId    Int
+
+  // relations 
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  watchParty      WatchParty     @relation(fields: [watchPartyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, watchPartyId])
+  @@map("watch_party_participants")
+}
+
+enum GameStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+}
+
+
+
