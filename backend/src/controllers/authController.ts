@@ -1,18 +1,14 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { Request, Response } from "express";
 import { LoginRequest, RegisterRequest, AuthResponse } from "../types/index";
 import * as jwtUtil from "../lib/jwtUtil"
 
-const JWT_SECRET: string = process.env.JWT_SECRET || "alternative-string";
-console.log("JWT_SECRET: ", JWT_SECRET)
-
 export const register = async (req: Request, res: Response) => {
 
   try {
     const { email, username, password }: RegisterRequest = req.body;
-
+    
     // check if the email or username is in use
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -43,13 +39,33 @@ export const register = async (req: Request, res: Response) => {
 
     const response: AuthResponse = { user, token };
 
-    res.json(response);
+    res.status(200).json(response);
   } catch (error) {
     console.log("Registration error: ", error);
-    res.status(500).json({ error: "Registation failed" });
+    res.status(500).json({ error: "Registration failed" });
   }
 };
 
-export const login = async (req: Request, res: Response) {
-  const { email, password }: LoginRequest = req.body;
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password }: LoginRequest = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, username: true, password: true, createdAt: true, updatedAt: true }
+    })
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Invalid credentials! "});
+    }
+
+    // jwt time 
+    const { password: _, ...userWithoutPassword } = user;
+    const token = jwtUtil.signToken({id: user.id, username: user.username });
+    const response: AuthResponse = { user: userWithoutPassword, token };
+    res.status(200).json(response);
+  } catch(err) {
+    console.log("Error logging in: ", err)
+    res.status(500).json({ error: "Login error "})
+  }
 }

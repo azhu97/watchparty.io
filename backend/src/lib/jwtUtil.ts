@@ -1,7 +1,11 @@
 import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
 import { JwtUserPayload } from "../types/index";
 
-const JWT_SECRET: Secret = process.env.JWT_SECRET || "alternative";
+if (!process.env.JWT_SECRET) {
+    throw new Error("Missing JWT_SECRET");
+}
+
+const JWT_SECRET: Secret = process.env.JWT_SECRET;
 
 export const signToken = (
   payload: JwtUserPayload,
