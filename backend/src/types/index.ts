@@ -42,6 +42,11 @@ export interface ActiveUser extends Omit<ExtendedUser, "password"> {
   socketId: string;
 }
 
+export interface JwtPayload {
+  email: string;
+  username: string;
+}
+
 export interface WatchPartyData {
   gameId: number;
   name: string;

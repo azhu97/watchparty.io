@@ -3,11 +3,12 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { Request, Response } from "express";
 import { LoginRequest, RegisterRequest, AuthResponse } from "../types";
-import dotenv from "dotenv";
 
-dotenv.config();
+const JWT_SECRET: string = process.env.JWT_SECRET || "alternative-string";
+console.log("JWT_SECRET: ", JWT_SECRET)
 
 export const register = async (req: Request, res: Response) => {
+
   try {
     const { email, username, password }: RegisterRequest = req.body;
 
@@ -23,11 +24,11 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // hash
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // put
     const user = await prisma.user.create({
-      data: { email, password, username },
+      data: { email: email, password: hashedPassword, username},
       select: {
         id: true,
         email: true,
@@ -39,7 +40,7 @@ export const register = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET as string,
+      JWT_SECRET
       { expiresIn: "24h" }
     );
 
@@ -51,3 +52,7 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Registation failed" });
   }
 };
+
+export const login = async (req: Request, res: Response) {
+  const { email, password }: LoginRequest = req.body;
+}
