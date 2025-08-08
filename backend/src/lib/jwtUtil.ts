@@ -1,7 +1,19 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
+import { JwtUserPayload } from "../types/index";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-module.exports = {
-    
+const JWT_SECRET: Secret = process.env.JWT_SECRET || "alternative";
+
+export const signToken = (
+  payload: JwtUserPayload,
+  options: SignOptions = { expiresIn: "24h" }
+): string => {
+  return jwt.sign(payload, JWT_SECRET, options);
+};
+
+export const verifyToken = (token: string): JwtPayload | string => {
+  return jwt.verify(token, JWT_SECRET);
+};
+
+export const decodeToken = (token: string): JwtPayload | string | null  => {
+  return jwt.decode(token);
 };

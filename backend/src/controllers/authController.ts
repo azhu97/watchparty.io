@@ -2,7 +2,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { Request, Response } from "express";
-import { LoginRequest, RegisterRequest, AuthResponse } from "../types";
+import { LoginRequest, RegisterRequest, AuthResponse } from "../types/index";
+import * as jwtUtil from "../lib/jwtUtil"
 
 const JWT_SECRET: string = process.env.JWT_SECRET || "alternative-string";
 console.log("JWT_SECRET: ", JWT_SECRET)
@@ -38,11 +39,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET
-      { expiresIn: "24h" }
-    );
+    const token = jwtUtil.signToken({ id: user.id, username: user.username });
 
     const response: AuthResponse = { user, token };
 

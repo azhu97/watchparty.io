@@ -42,8 +42,8 @@ export interface ActiveUser extends Omit<ExtendedUser, "password"> {
   socketId: string;
 }
 
-export interface JwtPayload {
-  email: string;
+export interface JwtUserPayload {
+  id: number;
   username: string;
 }
 
