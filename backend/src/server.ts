@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import authRoute from "./routes/authRoute";
+import gameRoute from "./routes/gameRoute"
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // routes
 app.use("/api/auth/", authRoute);
+app.use("/api/games/", gameRoute);
 
 app.listen(PORT, () => {
   console.log("Server is running on port " + PORT);
