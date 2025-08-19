@@ -71,4 +71,12 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
       console.error("Error saving chat message: ", error);
     }
   });
+  
+  // handle disconnects 
+  socket.on('disconnect', () => {
+    activerUsers = activerUsers.filter(user => user.socketId !== socket.id);
+    io.emit('users-online', activerUsers.length);
+    console.log("User disconnected: ", socket.id)
+  })
 };
+
