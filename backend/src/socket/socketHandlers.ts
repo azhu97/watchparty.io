@@ -80,3 +80,48 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
   })
 };
 
+// live game updates (currently randomly updates not accurate but use for mock data)
+export const startLiveGameUpdates = (io: SocketIOServer) => {
+  setInterval(async () => {
+    try {
+      const liveGames = await prisma.game.findMany({
+        where: { status: 'LIVE' }
+      });
+      
+      for (const game of liveGames) {
+        // Randomly update scores
+        if (Math.random() > 0.7) {
+          const homeScoreIncrease = Math.random() > 0.5 ? Math.floor(Math.random() * 3) + 1 : 0;
+          const awayScoreIncrease = homeScoreIncrease === 0 ? Math.floor(Math.random() * 3) + 1 : 0;
+          
+          // Update time
+          const [minutes, seconds] = game.timeLeft.split(':').map(Number);
+          let newSeconds = seconds - 1;
+          let newMinutes = minutes;
+          
+          if (newSeconds < 0) {
+            newSeconds = 59;
+            newMinutes -= 1;
+          }
+          
+          if (newMinutes >= 0) {
+            const updatedGame = await prisma.game.update({
+              where: { id: game.id },
+              data: {
+                homeScore: game.homeScore + homeScoreIncrease,
+                awayScore: game.awayScore + awayScoreIncrease,
+                timeLeft: `${newMinutes}:${newSeconds.toString().padStart(2, '0')}`
+              }
+            });
+            
+            // Broadcast updated game to all users in that game room
+            io.to(`game-${game.id}`).emit('game-update', updatedGame);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error updating live games:', error);
+    }
+  }, 3000); // Update every 3 seconds
+};
+
