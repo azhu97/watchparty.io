@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { ActiveUser, ChatMessageData } from "../types";
 
 // store active users, maybe later move to redis
-let activerUsers: ActiveUser[] = [];
+let activeUsers: ActiveUser[] = [];
 
 export const handleConnection = (io: SocketIOServer, socket: Socket) => {
   console.log("Connecting User: ", socket.id);
@@ -25,7 +25,7 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
       // check if the user is valid, if so push into the stack
       if (user) {
         const updatedUser: ActiveUser = { ...user, socketId: socket.id };
-        activerUsers.push(updatedUser);
+        activeUsers.push(updatedUser);
         console.log(`${updatedUser.username} joined on socket. `);
 
         // send games to the new user
@@ -35,7 +35,7 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
         socket.emit("games-update", games);
 
         // send user count to the client
-        socket.emit("users-online", activerUsers.length);
+        socket.emit("users-online", activeUsers.length);
       }
     } catch (error) {
       console.error("Error joining socket: ", error);
@@ -73,8 +73,8 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
   
   // handle disconnects 
   socket.on('disconnect', () => {
-    activerUsers = activerUsers.filter(user => user.socketId !== socket.id);
-    io.emit('users-online', activerUsers.length);
+    activeUsers = activeUsers.filter(user => user.socketId !== socket.id);
+    io.emit('users-online', activeUsers.length);
     console.log("User disconnected: ", socket.id)
   })
 };
