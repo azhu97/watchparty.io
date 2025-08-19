@@ -1,7 +1,7 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { prisma } from "../lib/prisma";
 import { ActiveUser, ChatMessageData } from "../types";
-import { findPackageJSON } from "module";
+import { userInfo } from "os";
 
 // store active users, maybe later move to redis
 let activerUsers: ActiveUser[] = [];
@@ -52,9 +52,23 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
   // handle leaving game room
   socket.on("leave-game", (gameId: number) => {
     socket.leave(`game-${gameId}`);
-    console.log(`User ${socket.id} has left game ${gameId}`)
+    console.log(`User ${socket.id} has left game ${gameId}`);
   });
 
-  // handle chat messages 
-  socket.on('chat-message', )
+  // handle chat messages
+  socket.on("chat-message", async (data: ChatMessageData) => {
+    try {
+      const { gameId, message, userId } = data;
+
+      // save the message in the data base
+      const chatMessage = await prisma.chatMessage.create({
+        data: { message, gameId, userId },
+        include: { user: { select: { username: true } } },
+      });
+
+      io.to(`game-${gameId}`).emit("chat-message", chatMessage);
+    } catch (error) {
+      console.error("Error saving chat message: ", error);
+    }
+  });
 };
