@@ -42,4 +42,19 @@ export const handleConnection = (io: SocketIOServer, socket: Socket) => {
       console.error("Error joining socket: ", error);
     }
   });
+
+  // handle joining game room for live updates
+  socket.on("join-game", (gameId: number) => {
+    socket.join(`game-${gameId}`);
+    console.log(`User ${socket.id} has joined game ${gameId}`);
+  });
+
+  // handle leaving game room
+  socket.on("leave-game", (gameId: number) => {
+    socket.leave(`game-${gameId}`);
+    console.log(`User ${socket.id} has left game ${gameId}`)
+  });
+
+  // handle chat messages 
+  socket.on('chat-message', )
 };
